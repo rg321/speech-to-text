@@ -13,6 +13,7 @@ from .vad import Vad
 from .utils.file_utils import write_audio
 from .websoket_server import WebSocketServer
 from .openai_api import OpenAIAPI
+from .demo import main_dummy
 
 
 class AppOptions(NamedTuple):
@@ -24,6 +25,7 @@ class AppOptions(NamedTuple):
     create_audio_file: bool = True
     use_websocket_server: bool = False
     use_openai_api: bool = False
+    
 
 
 class AudioTranscriber:
@@ -51,6 +53,9 @@ class AudioTranscriber:
         self.stream = None
         self._running = asyncio.Event()
         self._transcribe_task = None
+        self.speech_counter = 0
+        self.max_audio_chunks_single_speech = 30
+
 
     async def transcribe_audio(self):
         # Ignore parameters that affect performance
@@ -77,7 +82,9 @@ class AudioTranscriber:
                     segments, _ = await self.event_loop.run_in_executor(executor, func)
 
                     for segment in segments:
-                        eel.display_transcription(segment.text)
+                        # eel.display_transcription(segment.text)
+                        print('-----------------------------', segment.text)
+                        main_dummy(segment.text)
                         if self.websocket_server is not None:
                             await self.websocket_server.send_message(segment.text)
 
@@ -90,15 +97,36 @@ class AudioTranscriber:
     def process_audio(self, audio_data: np.ndarray, frames: int, time, status):
         is_speech = self.vad.is_speech(audio_data)
         if is_speech:
+            self.speech_counter += 1
             self.silence_counter = 0
             self.audio_data_list.append(audio_data.flatten())
+            # print('is_speech. with shape ', audio_data.flatten().shape,)
+            if self.speech_counter % 10 == 0:
+                print('speech_counter', self.speech_counter)
         else:
+            # print('-----')
+            if self.speech_counter != 0: print('\n')
+            self.speech_counter = 0
             self.silence_counter += 1
             if self.app_options.include_non_speech:
                 self.audio_data_list.append(audio_data.flatten())
 
-        if not is_speech and self.silence_counter > self.app_options.silence_limit:
+        ## push only when silence comes
+        ## certain silence is allowed before transcription
+        # print('silence_limit', self.app_options.silence_limit)
+
+        # if not is_speech and self.silence_counter > self.app_options.silence_limit:
+        if (not is_speech or self.speech_counter > self.max_audio_chunks_single_speech):# \
+            #and self.silence_counter > self.app_options.silence_limit:
             self.silence_counter = 0
+            if self.speech_counter != 0: print('\n')
+            self.speech_counter = 0
+            if not is_speech: # if speech_counter > self.max_audio_chunks_single_speech, we
+                # donot want subscribing to stop, so donot reset speech_counter to 0
+                self.speech_counter = 0
+            # else:
+            #     self.speech_counter = int(self.max_audio_chunks_single_speech * 0.5)
+            
 
             if self.app_options.create_audio_file:
                 self.all_audio_data_list.extend(self.audio_data_list)

@@ -13,7 +13,7 @@ class Vad:
         options.log_severity_level = 4
 
         self.inference_session = onnxruntime.InferenceSession(
-            model_path, sess_options=options
+            model_path, sess_options=options, providers=["CPUExecutionProvider"]
         )
         self.SAMPLING_RATE = 16000
         self.threshold = threshold

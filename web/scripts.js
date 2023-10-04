@@ -249,6 +249,7 @@ function audioTranscription() {
   const reader = new FileReader();
   reader.onload = function (e) {
     const data = new Uint8Array(e.target.result);
+    console.log(data);
     eel.audio_transcription(
       {
         app_settings: appSettings,

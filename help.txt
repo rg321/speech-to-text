@@ -1,0 +1,5 @@
+start_transcription -> process_audio; transcribe_audio -> fastwhisper
+
+non-speech-threshold: below which its noise 
+higher value is better as less data to transcribe
+model runs fast
