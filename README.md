@@ -8,7 +8,7 @@ while readme of speech-to-text is present below
 
 Steps to run -:
 
-Install requirements.txt for both repos. One is in parent folder one is in speech_to_text
+Install requirements.txt for both repos. One is in parent folder while other one is in speech_to_text
 ```
 git clone https://github.com/rg321/speech-to-text
 
