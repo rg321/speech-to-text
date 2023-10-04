@@ -20,6 +20,8 @@ cd speech_to_text
 
 pip install -r requirements.txt
 
+cd ..
+
 PYTHONPATH=speech_to_text python3 -m speech_to_text
 ```
 
